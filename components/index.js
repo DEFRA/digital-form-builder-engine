@@ -491,7 +491,13 @@ const makeComponentTypes = {
       },
       getViewModel (formData, errors) {
         const viewModel = getBaseFormFieldViewModel(component, formData, errors)
-        const formDataItems = name in formData ? formData[name].split(',') : []
+        let formDataItems = []
+
+        if (name in formData) {
+          formDataItems = Array.isArray(formData[name])
+            ? formData[name]
+            : formData[name].split(',')
+        }
 
         Object.assign(viewModel, {
           fieldset: {
