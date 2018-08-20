@@ -34,6 +34,8 @@ $(function () {
       $component.find('.uk-address-query').hide()
       $component.find('.uk-address-selector').show()
       $select.data('results', results)
+    }).fail(function () {
+      showManual($component)
     })
   })
 

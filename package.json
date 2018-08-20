@@ -1,6 +1,6 @@
 {
   "name": "digital-form-builder-engine",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A hapi plugin providing a visual designer for digital form builder based applications",
   "main": "index.js",
   "scripts": {
