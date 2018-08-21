@@ -42,7 +42,7 @@ module.exports = {
             method: 'get',
             path: page.path,
             handler: async (request, h) => {
-              const state = await getState()
+              const state = await getState(request)
               const formData = page.getFormDataFromState(state)
 
               return h.view('index', page.getViewModel(formData))
@@ -71,7 +71,7 @@ module.exports = {
                     [page.section.name]: stateResult.value
                   } : stateResult.value
 
-                  const state = await mergeState(update)
+                  const state = await mergeState(request, update)
 
                   return proceed(request, h, page.getNext(state))
                 }
@@ -86,7 +86,7 @@ module.exports = {
         method: 'get',
         path: '/summary',
         handler: async (request, h) => {
-          const state = await getState()
+          const state = await getState(request)
           const viewModel = new SummaryViewModel(model, state)
 
           return h.view('summary', viewModel)
