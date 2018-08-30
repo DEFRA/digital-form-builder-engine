@@ -450,13 +450,27 @@ const makeComponentTypes = {
             legend: viewModel.label
           },
           items: items.map(item => {
-            return {
-              text: item.text,
+            const itemModel = {
+              html: item.text,
               value: item.value,
               // Do a loose string based check as state may or
               // may not match the item value types.
               checked: '' + item.value === '' + formData[name]
             }
+
+            if (options.bold) {
+              itemModel.label = {
+                classes: 'govuk-label--s'
+              }
+            }
+
+            if (item.description) {
+              itemModel.hint = {
+                html: item.description
+              }
+            }
+
+            return itemModel
           })
         })
 
@@ -509,13 +523,27 @@ const makeComponentTypes = {
             legend: viewModel.label
           },
           items: items.map(item => {
-            return {
+            const itemModel = {
               text: item.text,
               value: item.value,
               // Do a loose string based check as state may or
               // may not match the item value types.
               checked: !!formDataItems.find(i => '' + item.value === i)
             }
+
+            if (options.bold) {
+              itemModel.label = {
+                classes: 'govuk-label--s'
+              }
+            }
+
+            if (item.description) {
+              itemModel.hint = {
+                html: item.description
+              }
+            }
+
+            return itemModel
           })
         })
 

@@ -30,11 +30,13 @@ const schema = joi.object().required().keys({
       is: 'string',
       then: joi.array().required().items(joi.object().keys({
         text: joi.string().required(),
-        value: joi.string().required()
+        value: joi.string().required(),
+        description: joi.string().allow('')
       })).unique('text').unique('value'),
       otherwise: joi.array().required().items(joi.object().keys({
         text: joi.string().required(),
-        value: joi.number().required()
+        value: joi.number().required(),
+        description: joi.string().allow('')
       })).unique('text').unique('value')
     })
   })).unique('name')
