@@ -86,6 +86,11 @@ const componentTypes = [
     subType: 'content'
   },
   {
+    name: 'Html',
+    title: 'Html',
+    subType: 'content'
+  },
+  {
     name: 'InsetText',
     title: 'Inset text',
     subType: 'content'
@@ -730,6 +735,15 @@ const makeComponentTypes = {
     }
   },
   Para (component) {
+    return {
+      getViewModel () {
+        return {
+          content: component.content
+        }
+      }
+    }
+  },
+  Html (component) {
     return {
       getViewModel () {
         return {
