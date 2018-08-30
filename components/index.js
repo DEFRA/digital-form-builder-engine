@@ -742,8 +742,8 @@ const makeComponentTypes = {
     return {
       getViewModel () {
         return {
-          summaryText: component.title,
-          text: component.content
+          summaryHtml: component.title,
+          html: component.content
         }
       }
     }
