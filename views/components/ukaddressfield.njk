@@ -10,16 +10,16 @@
     <div class="uk-address-component">
       <div class="uk-address-lookup" style="display: none">
         <div class="govuk-form-group uk-address-query">
-          <label class="govuk-label govuk-!-width-one-third" for="address-lookup[postcodesearch]">Postcode</label>
-          <input id="address-lookup[postcodesearch]" type="text" class="govuk-input govuk-!-width-one-third" maxlength="10">
+          <label class="govuk-label govuk-!-width-one-third" for="postcode">Postcode</label>
+          <input id="postcode" type="text" class="postcode-query govuk-input govuk-!-width-one-third" maxlength="10">
           <button class="govuk-button postcode-lookup">Find Address</button>
         </div>
         <div class="govuk-body uk-address-selector" style="display: none">
-          <label class="govuk-label govuk-!-font-weight-bold" for="address-lookup[postcodesearch]">Postcode</label>
+          <label class="govuk-label govuk-!-font-weight-bold" for="addresses">Postcode</label>
           <span class="postcode-query-display govuk-!-font-weight-bold"></span>
           <a class="postcode-query-link" href="#">Change</a>
           <div class="govuk-!-margin-top-5 govuk-!-margin-bottom-5">
-            <select class="govuk-select "></select>
+            <select id="addresses" class="govuk-select "></select>
           </div>
           <a class="postcode-manual-link" href="#">I can't find my address in the list</a>
         </div>
