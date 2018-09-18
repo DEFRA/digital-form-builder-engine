@@ -1,3 +1,4 @@
+const vm = require('vm')
 const joi = require('joi')
 const moment = require('moment')
 const defSchema = require('./schema')
@@ -1075,13 +1076,19 @@ function makeModel (def) {
       page.next.forEach(next => {
         if (next.if) {
           // Use this for now. Some alternatives I've looked into are:
-          // `jexl`, `filtrex`, `jsrules`. NOT to be used in PROD.
-          // eslint-disable-next-line
-          const fn = new Function('state', 'context', `
+          // `jexl`, `filtrex`, `jsrules`, `expr-eval`, `safe-eval`.
+          // There's a minor security concern generally with this `vm` approach
+          // but it's a step up from `eval/new Function`. See
+          // https://odino.org/eval-no-more-understanding-vm-vm2-nodejs/#conclusion
+          const script = new vm.Script(`
             with (state) {
-              return ${next.if}
-            }
-          `)
+              ${next.if}
+            }`
+          )
+
+          const fn = function (state, context) {
+            return script.runInNewContext({ state, context }, { timeout: 2000 })
+          }
 
           next.if = function (state) {
             try {
