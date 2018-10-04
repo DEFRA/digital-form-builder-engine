@@ -26,6 +26,10 @@ module.exports = {
         }
       }
 
+      if (!playgroundMode) {
+        server.expose('model', model)
+      }
+
       async function get (request, page, h) {
         const state = await getState(request)
         const formData = page.getFormDataFromState(state)
