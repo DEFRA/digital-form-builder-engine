@@ -705,7 +705,7 @@ const makeComponentTypes = {
   }
 }
 
-const formComponents = componentTypes.filter(t => t.subType === 'form').map(t => t.name)
+const formComponents = componentTypes.filter(t => t.subType === 'field').map(t => t.name)
 
 function isFormComponent (component) {
   return formComponents.indexOf(component.type) > -1
