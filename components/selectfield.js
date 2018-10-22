@@ -6,12 +6,14 @@ class SelectField extends FormComponent {
     super(def, model)
 
     const { options } = this
-    const list = def.lists.find(list => list.name === options.list)
+    const list = model.lists.find(list => list.name === options.list)
     const items = list.items
     const values = items.map(item => item.value)
     const formSchema = helpers.buildFormSchema('string'/* list.type */, this) // .valid(values)
     const stateSchema = helpers.buildStateSchema(list.type, this).valid(values)
 
+    this.list = list
+    this.items = items
     this.formSchema = formSchema
     this.stateSchema = stateSchema
   }

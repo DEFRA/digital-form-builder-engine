@@ -17,7 +17,7 @@ class DateTimeField extends FormComponent {
   }
 
   getStateSchemaKeys () {
-    return FormComponent.getStateSchemaKeys(this.name, 'date', this)
+    return helpers.getStateSchemaKeys(this.name, 'date', this)
   }
 
   getFormValueFromState (state) {
