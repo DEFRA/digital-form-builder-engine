@@ -24,7 +24,11 @@ class SummaryViewModel {
         }
       })
 
-      details.push({ name: section && section.name, title: section && section.title, items })
+      details.push({
+        name: section && section.name,
+        title: section && section.title,
+        items
+      })
     })
 
     const schema = model.schema
@@ -61,7 +65,6 @@ class SummaryViewModel {
 
     this.result = result
     this.details = details
-    this.showPDF = !this.hasErrors
     this.value = state
   }
 }

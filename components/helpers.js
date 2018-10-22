@@ -55,8 +55,22 @@ function buildStateSchema (schemaType, component) {
   return schema
 }
 
+function getFormSchemaKeys (name, schemaType, component) {
+  const schema = buildFormSchema(schemaType, component)
+
+  return { [component.name]: schema }
+}
+
+function getStateSchemaKeys (name, schemaType, component) {
+  const schema = buildStateSchema(schemaType, component)
+
+  return { [name]: schema }
+}
+
 module.exports = {
   buildSchema,
   buildFormSchema,
-  buildStateSchema
+  buildStateSchema,
+  getFormSchemaKeys,
+  getStateSchemaKeys
 }
