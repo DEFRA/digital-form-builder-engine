@@ -5,6 +5,7 @@ const schema = joi.object().required().keys({
     path: joi.string().required(),
     title: joi.string(),
     section: joi.string(),
+    controller: joi.string(),
     components: joi.array().required().items(joi.object().keys({
       type: joi.string().required(),
       name: joi.string(),
@@ -21,6 +22,10 @@ const schema = joi.object().required().keys({
   sections: joi.array().required().items(joi.object().keys({
     name: joi.string().required(),
     title: joi.string().required()
+  })).unique('name'),
+  conditions: joi.array().required().items(joi.object().keys({
+    name: joi.string().required(),
+    value: joi.string().required()
   })).unique('name'),
   lists: joi.array().required().items(joi.object().keys({
     name: joi.string().required(),

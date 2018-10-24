@@ -28,7 +28,7 @@ $components.forEach(function (component) {
       return showManual()
     }
 
-    getJSON('/find-address?postcode=' + postcodeQuery, function (err, results) {
+    getJSON('/__/find-address?postcode=' + postcodeQuery, function (err, results) {
       if (err) {
         showManual()
         return
