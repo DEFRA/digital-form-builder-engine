@@ -56,30 +56,32 @@ class Model {
     this.pages = def.pages.map(pageDef => this.makePage(pageDef))
   }
 
-  // get schema () {
-  //   // Get entire model schema
-  //   const keys = {}
-  //   // const sectionSchema = {}
-  //   ;[undefined].concat(this.sections).forEach(section => {
-  //     const sectionPages = this.pages.filter(page => page.section === section)
+  makeSchema (state) {
+    // Build the entire model schema
+    // from the individual pages/sections
+    let schema = joi.object().required()
+    ;[undefined].concat(this.sections).forEach(section => {
+      const sectionPages = this.pages.filter(page => page.section === section)
 
-  //     if (section) {
-  //       const sectionKeys = {}
-  //       sectionPages.forEach(sectionPage => {
-  //         Object.assign(sectionKeys, sectionPage.components.getStateSchemaKeys())
-  //       })
-  //       // sectionSchema[section.name] =
-  //       keys[section.name] = joi.object().required().keys(sectionKeys)
-  //     } else {
-  //       sectionPages.forEach(sectionPage => {
-  //         Object.assign(keys, sectionPage.components.getStateSchemaKeys())
-  //       })
-  //     }
-  //   })
+      if (section) {
+        let sectionSchema = joi.object().required()
 
-  //   return joi.object().required().keys(keys)
-  //   // this.sectionSchema = sectionSchema
-  // }
+        sectionPages.forEach(sectionPage => {
+          sectionSchema = sectionSchema.concat(sectionPage.stateSchema)
+        })
+
+        schema = schema.append({
+          [section.name]: sectionSchema
+        })
+      } else {
+        sectionPages.forEach(sectionPage => {
+          schema = schema.concat(sectionPage.stateSchema)
+        })
+      }
+    })
+
+    return schema
+  }
 
   makePage (pageDef) {
     if (pageDef.controller) {
