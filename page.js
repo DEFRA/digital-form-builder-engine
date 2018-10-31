@@ -17,6 +17,7 @@ class Page {
     this.pageDef = pageDef
     this.path = pageDef.path
     this.title = pageDef.title
+    this.condition = pageDef.condition
 
     // Resolve section
     const section = pageDef.section &&
@@ -25,7 +26,6 @@ class Page {
     this.section = section
 
     // Components collection
-    // const components = makeComponentCollection(pageDef.components, def)
     const components = new ComponentCollection(pageDef.components, model)
     this.components = components
     this.hasFormComponents = !!components.formItems.length
@@ -33,48 +33,6 @@ class Page {
     // Schema
     this[FORM_SCHEMA] = this.components.formSchema
     this[STATE_SCHEMA] = this.components.stateSchema
-
-    // Navigation
-    this.hasNext = Array.isArray(pageDef.next) && pageDef.next.length > 0
-
-    if (this.hasNext) {
-      this.next = pageDef.next.slice().sort((a, b) => {
-        return a.if ? (!b.if ? -1 : 0) : (b.if ? 1 : 0)
-      })
-
-      this.next.forEach(next => {
-        if (next.if) {
-          // First look for a condition by name
-          // and evaluate using the global state
-          const conditions = model.conditions
-          const condition = conditions[next.if]
-
-          if (condition) {
-            next.if = function (state) {
-              return !!condition.fn(state)
-            }
-          } else {
-            // Otherwise parse inline condition
-            // and evaluate using the local state
-            const obj = parseJSON(next.if)
-            const schema = Array.isArray(obj)
-              ? joi.alternatives(obj)
-              : joi.object(obj)
-
-            const fn = (value) => {
-              const conditionOptions = this.conditionOptions
-
-              const isValid = !joi.validate(value, schema, conditionOptions).error
-              return isValid
-            }
-
-            next.if = function (state) {
-              return !!fn(section ? state[section.name] : state, state)
-            }
-          }
-        }
-      })
-    }
   }
 
   getViewModel (formData, errors) {
@@ -105,17 +63,25 @@ class Page {
   }
 
   getNext (state) {
-    if (this.hasNext) {
-      const next = this.next.find(n => !n.if || n.if(state))
+    const page = this.model.pages.filter(p => p !== this).find(page => {
+      const value = page.section ? state[page.section.name] : state
+      const isRequired = page.condition
+        ? (this.model.conditions[page.condition]).fn(state)
+        : true
 
-      if (!next) {
-        return this.defaultNextPath
+      if (isRequired) {
+        if (!page.hasFormComponents) {
+          return true
+        } else {
+          const error = joi.validate(value || {}, page.stateSchema.required(), this.model.conditionOptions).error
+          const isValid = !error
+
+          return !isValid
+        }
       }
+    })
 
-      return next.path
-    } else {
-      return this.defaultNextPath
-    }
+    return page && page.path || this.defaultNextPath
   }
 
   getFormDataFromState (state) {

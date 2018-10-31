@@ -117,8 +117,8 @@ class ComponentCollection {
 
     this.items = itemTypes
     this.formItems = formItems
-    this.formSchema = joi.object().keys(this.getFormSchemaKeys())
-    this.stateSchema = joi.object().keys(this.getStateSchemaKeys())
+    this.formSchema = joi.object().keys(this.getFormSchemaKeys()).required()
+    this.stateSchema = joi.object().keys(this.getStateSchemaKeys()).required()
   }
 
   getFormSchemaKeys () {

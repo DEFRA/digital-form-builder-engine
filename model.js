@@ -3,6 +3,21 @@ const path = require('path')
 const schema = require('./schema')
 const Page = require('./page')
 const parseJSON = require('jsonic')
+const parseExpr = require('logic-query-parser')
+const Parser = require('expr-eval').Parser
+
+function walk (obj, callback) {
+  callback(obj)
+  if (obj.type === 'or') {
+    return obj.values.map(o => {
+      return walk(o, callback)
+    })
+  } else if (obj.type === 'and') {
+    return obj.values.map(o => {
+      return walk(o, callback)
+    })
+  }
+}
 
 class Model {
   constructor (def, options) {
@@ -53,6 +68,12 @@ class Model {
       this.conditions[condition.name] = condition
     })
 
+    // this.expressions = {}
+    // def.expressions.forEach(expressionDef => {
+    //   const expression = this.makeExpression(expressionDef)
+    //   this.expressions[expression.name] = expression
+    // })
+
     this.pages = def.pages.map(pageDef => this.makePage(pageDef))
   }
 
@@ -96,23 +117,91 @@ class Model {
     }
   }
 
+  // makeCondition (condition) {
+  //   const obj = parseJSON(condition.value)
+  //   const schema = Array.isArray(obj)
+  //     ? joi.alternatives(obj)
+  //     : joi.object(obj)
+
+  //   const fn = (value) => {
+  //     const conditionOptions = this.conditionOptions
+  //     const isValid = !joi.validate(value, schema, conditionOptions).error
+  //     return isValid
+  //   }
+
+  //   return {
+  //     name: condition.name,
+  //     value: condition.value,
+  //     obj,
+  //     schema,
+  //     fn: fn
+  //   }
+  // }
+
   makeCondition (condition) {
-    const obj = parseJSON(condition.value)
-    const schema = Array.isArray(obj)
-      ? joi.alternatives(obj)
-      : joi.object(obj)
+    const parser = new Parser()
+    const expr = parser.parse(condition.value)
+    // console.log(expr.evaluate({ x: { fn: () => 2, aa: {s:9} } })); // 7
 
     const fn = (value) => {
-      const conditionOptions = this.conditionOptions
-      const isValid = !joi.validate(value, schema, conditionOptions).error
-      return isValid
+      const ctx = new EvaluationContext(this.conditions, value)
+      try {
+        const isValid = expr.evaluate(ctx)
+        return isValid
+      } catch (err) {
+        return false
+      }
     }
 
     return {
       name: condition.name,
       value: condition.value,
-      obj,
+      expr,
       schema,
+      fn: fn
+    }
+  }
+
+  makeExpression (expression) {
+    const tree = parseExpr.parse(expression.value)
+    const query = parseExpr.utils.binaryTreeToQueryJson(tree)
+
+    // Resolve conditions and build expressions
+    walk(query, (v) => {
+      if (v.type === 'string') {
+        if (v.value === '!') {
+          console.log(v)
+        } else {
+          let not = false
+          let name = v.value
+          if (v.value.startsWith('!')) {
+            not = true
+            name = v.value.slice(1)
+          }
+
+          const fn = (this.conditions[name] || this.expressions[name]).fn
+
+          v.fn = not ? (state) => !fn(state) : fn
+        }
+      } else if (query.type === 'or') {
+        v.fn = (value) => {
+          return query.values.some(item => item.fn(value))
+        }
+      } else if (query.type === 'and') {
+        v.fn = (value) => {
+          return query.values.every(item => item.fn(value))
+        }
+      } else {
+        throw new Error(`Invalid type ${query.type}`)
+      }
+    })
+
+    const fn = query.fn
+    return {
+      name: expression.name,
+      value: expression.value,
+      tree,
+      query,
       fn: fn
     }
   }
@@ -120,4 +209,16 @@ class Model {
   get conditionOptions () { return { allowUnknown: true, presence: 'required' } }
 }
 
+class EvaluationContext {
+  constructor (conditions, value) {
+    Object.assign(this, value)
+    for (let key in conditions) {
+      Object.defineProperty(this, key, {
+        get () {
+          return conditions[key].fn(value)
+        }
+      })
+    }
+  }
+}
 module.exports = Model
