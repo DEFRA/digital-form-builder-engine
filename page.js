@@ -1,5 +1,3 @@
-const parseJSON = require('jsonic')
-
 const joi = require('joi')
 const { proceed } = require('./helpers')
 const { ComponentCollection } = require('./components')
@@ -81,7 +79,7 @@ class Page {
       }
     })
 
-    return page && page.path || this.defaultNextPath
+    return (page && page.path) || this.defaultNextPath
   }
 
   getFormDataFromState (state) {
