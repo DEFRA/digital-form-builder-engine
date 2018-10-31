@@ -1,6 +1,6 @@
 {
   "name": "digital-form-builder-engine",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A hapi plugin providing the engine for digital form builder based applications",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "boom": "7.2.0",
-    "expr-eval": "^1.2.2",
+    "expr-eval": "1.2.2",
     "jsonic": "0.3.1",
     "logic-query-parser": "0.0.5",
     "moment": "2.22.2",
