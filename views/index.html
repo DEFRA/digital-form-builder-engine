@@ -1,7 +1,7 @@
 {% from "error-summary/macro.njk" import govukErrorSummary %}
-{% from "partials/components.njk" import componentList %}
+{% from "partials/components.html" import componentList %}
 
-{% extends 'layout.njk' %}
+{% extends 'layout.html' %}
 
 {% block content %}
   <div class="govuk-grid-row">
@@ -10,10 +10,10 @@
         {{ govukErrorSummary(errors) }}
       {% endif %}
 
-      {% include "partials/heading.njk" %}
+      {% include "partials/heading.html" %}
 
       {% if page.hasFormComponents or page.hasNext %}
-        {% include "partials/form.njk" %}
+        {% include "partials/form.html" %}
       {% else %}
         {{ componentList(components) }}
       {% endif %}
