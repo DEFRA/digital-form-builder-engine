@@ -104,7 +104,8 @@ class Model {
 
   makeCondition (condition) {
     const parser = new Parser()
-    const expr = parser.parse(condition.value)
+    const { name, value } = condition
+    const expr = parser.parse(value)
 
     const fn = (value) => {
       const ctx = new EvaluationContext(this.conditions, value)
@@ -117,11 +118,10 @@ class Model {
     }
 
     return {
-      name: condition.name,
-      value: condition.value,
+      name,
+      value,
       expr,
-      schema,
-      fn: fn
+      fn
     }
   }
 

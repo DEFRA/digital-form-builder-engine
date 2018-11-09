@@ -14,7 +14,11 @@ const schema = joi.object().required().keys({
       hint: joi.string(),
       options: joi.object().default({}),
       schema: joi.object().default({})
-    }).unknown(true))
+    }).unknown(true)),
+    next: joi.array().items(joi.object().keys({
+      path: joi.string().required(),
+      if: joi.string()
+    }))
   })).unique('path'),
   sections: joi.array().required().items(joi.object().keys({
     name: joi.string().required(),

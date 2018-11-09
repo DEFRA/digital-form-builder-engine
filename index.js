@@ -16,7 +16,9 @@ module.exports = {
         server.route(page.makeGetRoute(model.getState))
 
         // POST
-        server.route(page.makePostRoute(model.mergeState))
+        if (page.hasFormComponents) {
+          server.route(page.makePostRoute(model.mergeState))
+        }
       })
 
       // FIND ADDRESS
