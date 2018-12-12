@@ -1,5 +1,7 @@
 const joi = require('joi')
 const componentTypes = require('../component-types')
+const nunjucks = require('nunjucks')
+const path = require('path')
 
 class Component {
   constructor (def, model) {
@@ -106,6 +108,69 @@ function getType (name) {
   return Types[name]
 }
 
+// An ES 6 class providing conditional reveal support for radio buttons (https://design-system.service.gov.uk/components/radios/)
+// and checkboxes (https://design-system.service.gov.uk/components/checkboxes/)
+class ConditionalFormComponent extends FormComponent {
+  constructor (def, model) {
+    super(def, model)
+    const { options } = this
+    const list = model.lists.find(list => list.name === options.list)
+    const items = list.items
+    const values = items.map(item => item.value)
+    this.list = list
+    this.items = items
+    this.values = values
+    this.createConditionalComponents(def, model)
+  }
+
+  getFormSchemaKeys () {
+    const filteredItems = this.items.filter(item => item.conditional && item.conditional.components)
+    const conditionalName = this.name
+    const formSchemaKeys = { [conditionalName]: this.formSchema }
+    // All conditional component values are submitted regardless of their visibilty.
+    // As such create Joi validation rules such that:
+    // a) When a conditional component is visible it is required.
+    // b) When a conditional component is not visible it is optional.
+    filteredItems.forEach(item => {
+      const conditionalFormSchemaKeys = item.conditional.components.getFormSchemaKeys()
+      // Iterate through the set of components handled by conditional reveal adding Joi validation rules
+      // based on whether or not the component controlling the conditional reveal is selected.
+      Object.keys(conditionalFormSchemaKeys).forEach(key => {
+        Object.assign(formSchemaKeys, {
+          [key]: joi.alternatives().when(conditionalName, {
+            is: item.value,
+            then: conditionalFormSchemaKeys[key].required(),
+            otherwise: conditionalFormSchemaKeys[key].optional().allow('')
+          })
+        })
+      })
+    })
+    return formSchemaKeys
+  }
+
+  createConditionalComponents (def, model) {
+    const filteredItems = this.list.items.filter(item => item.conditional && item.conditional.components)
+    // Create a collection of conditional components that can be converted to a view model and rendered by Nunjucks
+    // before primary view model rendering takes place.
+    filteredItems.map(item => {
+      item.conditional.components = new ComponentCollection(item.conditional.components, model)
+    })
+  }
+
+  addConditionalComponents (item, itemModel, formData, errors) {
+    // The gov.uk design system Nunjucks examples for conditional reveal reference variables from macros. There does not appear to
+    // to be a way to do this in JavaScript. As such, render the conditional components with Nunjucks before the main view is rendered.
+    // The conditional html tag used by the gov.uk design system macro will reference HTML rarther than one or more additional
+    // gov.uk design system macros.
+    if (item.conditional) {
+      itemModel.conditional = {
+        html: nunjucks.render('conditional-components.html', { components: item.conditional.components.getViewModel(formData, errors) })
+      }
+    }
+    return itemModel
+  }
+}
+
 class ComponentCollection {
   constructor (items, model) {
     const itemTypes = items.map(def => {
@@ -172,4 +237,6 @@ class ComponentCollection {
   }
 }
 
-module.exports = { Component, FormComponent, ComponentCollection }
+// Configure Nunjucks to allow rendering of content that is revealed conditionally.
+nunjucks.configure([path.resolve(__dirname, '../views/components/'), path.resolve(__dirname, '../views/partials/'), path.resolve(__dirname, '../node_modules/govuk-frontend/components/')])
+module.exports = { Component, FormComponent, ConditionalFormComponent, ComponentCollection }

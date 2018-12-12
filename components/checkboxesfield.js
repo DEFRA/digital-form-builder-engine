@@ -1,26 +1,18 @@
 const joi = require('joi')
-const { FormComponent } = require('.')
+const { ConditionalFormComponent } = require('.')
 const helpers = require('./helpers')
 
-class CheckboxesField extends FormComponent {
+class CheckboxesField extends ConditionalFormComponent {
   constructor (def, model) {
     super(def, model)
-    const { options } = this
-    const list = model.lists.find(list => list.name === options.list)
-    const items = list.items
-    const values = items.map(item => item.value)
+    const { list, options, values } = this
     const itemSchema = joi[list.type]().valid(values)
     const itemsSchema = joi.array().items(itemSchema)
     const alternatives = joi.alternatives([itemSchema, itemsSchema])
 
     this.list = list
-    this.items = items
     this.formSchema = helpers.buildFormSchema(alternatives, this, options.required !== false)
     this.stateSchema = helpers.buildStateSchema(alternatives, this)
-  }
-
-  getFormSchemaKeys () {
-    return { [this.name]: this.formSchema }
   }
 
   getStateSchemaKeys () {
@@ -78,7 +70,7 @@ class CheckboxesField extends FormComponent {
           }
         }
 
-        return itemModel
+        return super.addConditionalComponents(item, itemModel, formData, errors)
       })
     })
 

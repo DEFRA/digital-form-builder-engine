@@ -37,12 +37,32 @@ const schema = joi.object().required().keys({
       then: joi.array().required().items(joi.object().keys({
         text: joi.string().required(),
         value: joi.string().required(),
-        description: joi.string().allow('')
+        description: joi.string().allow(''),
+        conditional: joi.object().keys({
+          components: joi.array().required().items(joi.object().keys({
+            type: joi.string().required(),
+            name: joi.string(),
+            title: joi.string(),
+            hint: joi.string(),
+            options: joi.object().default({}),
+            schema: joi.object().default({})
+          }).unknown(true)).unique('name')
+        })
       })).unique('text').unique('value'),
       otherwise: joi.array().required().items(joi.object().keys({
         text: joi.string().required(),
         value: joi.number().required(),
-        description: joi.string().allow('')
+        description: joi.string().allow(''),
+        conditional: joi.object().keys({
+          components: joi.array().required().items(joi.object().keys({
+            type: joi.string().required(),
+            name: joi.string(),
+            title: joi.string(),
+            hint: joi.string(),
+            options: joi.object().default({}),
+            schema: joi.object().default({})
+          }).unknown(true)).unique('name')
+        })
       })).unique('text').unique('value')
     })
   })).unique('name')
