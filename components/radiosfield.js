@@ -13,10 +13,6 @@ class RadiosField extends ConditionalFormComponent {
     this.stateSchema = stateSchema
   }
 
-  getStateSchemaKeys () {
-    return { [this.name]: this.stateSchema }
-  }
-
   getDisplayStringFromState (state) {
     const { name, items } = this
     const value = state[name]

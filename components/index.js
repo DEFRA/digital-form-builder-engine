@@ -2,6 +2,8 @@ const joi = require('joi')
 const componentTypes = require('../component-types')
 const nunjucks = require('nunjucks')
 const path = require('path')
+const createConditionalComponents = Symbol('createConditionalComponents')
+const getSchemaKeys = Symbol('getSchemaKeys')
 
 class Component {
   constructor (def, model) {
@@ -120,41 +122,7 @@ class ConditionalFormComponent extends FormComponent {
     this.list = list
     this.items = items
     this.values = values
-    this.createConditionalComponents(def, model)
-  }
-
-  getFormSchemaKeys () {
-    const filteredItems = this.items.filter(item => item.conditional && item.conditional.componentCollection)
-    const conditionalName = this.name
-    const formSchemaKeys = { [conditionalName]: this.formSchema }
-    // All conditional component values are submitted regardless of their visibilty.
-    // As such create Joi validation rules such that:
-    // a) When a conditional component is visible it is required.
-    // b) When a conditional component is not visible it is optional.
-    filteredItems.forEach(item => {
-      const conditionalFormSchemaKeys = item.conditional.componentCollection.getFormSchemaKeys()
-      // Iterate through the set of components handled by conditional reveal adding Joi validation rules
-      // based on whether or not the component controlling the conditional reveal is selected.
-      Object.keys(conditionalFormSchemaKeys).forEach(key => {
-        Object.assign(formSchemaKeys, {
-          [key]: joi.alternatives().when(conditionalName, {
-            is: item.value,
-            then: conditionalFormSchemaKeys[key].required(),
-            otherwise: conditionalFormSchemaKeys[key].optional().allow('')
-          })
-        })
-      })
-    })
-    return formSchemaKeys
-  }
-
-  createConditionalComponents (def, model) {
-    const filteredItems = this.list.items.filter(item => item.conditional && item.conditional.components)
-    // Create a collection of conditional components that can be converted to a view model and rendered by Nunjucks
-    // before p0rimary view model rendering takes place.
-    filteredItems.map(item => {
-      item.conditional.componentCollection = new ComponentCollection(item.conditional.components, model)
-    })
+    this[createConditionalComponents](def, model)
   }
 
   addConditionalComponents (item, itemModel, formData, errors) {
@@ -168,6 +136,61 @@ class ConditionalFormComponent extends FormComponent {
       }
     }
     return itemModel
+  }
+
+  getFormSchemaKeys () {
+    return this[getSchemaKeys]('form')
+  }
+
+  getStateFromValidForm (payload) {
+    const state = super.getStateFromValidForm(payload)
+    const filteredItems = this.list.items.filter(item => item.conditional && item.conditional.components)
+    filteredItems.forEach(item => {
+      Object.assign(state, item.conditional.componentCollection.getStateFromValidForm(payload))
+    })
+    // Remove payload values associated with unrevealed conditional content so that state schema validaton succeeds.
+    Object.keys(state).filter(key => !state[key]).map(key => delete state[key])
+    return state
+  }
+
+  getStateSchemaKeys () {
+    return this[getSchemaKeys]('state')
+  }
+
+  [createConditionalComponents] (def, model) {
+    const filteredItems = this.list.items.filter(item => item.conditional && item.conditional.components)
+    // Create a collection of conditional components that can be converted to a view model and rendered by Nunjucks
+    // before primary view model rendering takes place.
+    filteredItems.map(item => {
+      item.conditional.componentCollection = new ComponentCollection(item.conditional.components, model)
+    })
+  }
+
+  [getSchemaKeys] (schemaType) {
+    const schemaName = `${schemaType}Schema`
+    const schemaKeysFunctionName = `get${schemaType.substring(0, 1).toUpperCase()}${schemaType.substring(1)}SchemaKeys`
+    const filteredItems = this.items.filter(item => item.conditional && item.conditional.componentCollection)
+    const conditionalName = this.name
+    const schemaKeys = { [conditionalName]: this[schemaName] }
+    // All conditional component values are submitted regardless of their visibilty.
+    // As such create Joi validation rules such that:
+    // a) When a conditional component is visible it is required.
+    // b) When a conditional component is not visible it is optional.
+    filteredItems.forEach(item => {
+      const conditionalSchemaKeys = item.conditional.componentCollection[schemaKeysFunctionName]()
+      // Iterate through the set of components handled by conditional reveal adding Joi validation rules
+      // based on whether or not the component controlling the conditional reveal is selected.
+      Object.keys(conditionalSchemaKeys).forEach(key => {
+        Object.assign(schemaKeys, {
+          [key]: joi.alternatives().when(conditionalName, {
+            is: item.value,
+            then: conditionalSchemaKeys[key].required(),
+            otherwise: conditionalSchemaKeys[key].optional().allow('')
+          })
+        })
+      })
+    })
+    return schemaKeys
   }
 }
 

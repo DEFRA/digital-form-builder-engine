@@ -15,10 +15,6 @@ class CheckboxesField extends ConditionalFormComponent {
     this.stateSchema = helpers.buildStateSchema(alternatives, this)
   }
 
-  getStateSchemaKeys () {
-    return { [this.name]: this.stateSchema }
-  }
-
   getDisplayStringFromState (state) {
     const { name, items } = this
 
