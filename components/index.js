@@ -124,7 +124,7 @@ class ConditionalFormComponent extends FormComponent {
   }
 
   getFormSchemaKeys () {
-    const filteredItems = this.items.filter(item => item.conditional && item.conditional.components)
+    const filteredItems = this.items.filter(item => item.conditional && item.conditional.componentCollection)
     const conditionalName = this.name
     const formSchemaKeys = { [conditionalName]: this.formSchema }
     // All conditional component values are submitted regardless of their visibilty.
@@ -132,7 +132,7 @@ class ConditionalFormComponent extends FormComponent {
     // a) When a conditional component is visible it is required.
     // b) When a conditional component is not visible it is optional.
     filteredItems.forEach(item => {
-      const conditionalFormSchemaKeys = item.conditional.components.getFormSchemaKeys()
+      const conditionalFormSchemaKeys = item.conditional.componentCollection.getFormSchemaKeys()
       // Iterate through the set of components handled by conditional reveal adding Joi validation rules
       // based on whether or not the component controlling the conditional reveal is selected.
       Object.keys(conditionalFormSchemaKeys).forEach(key => {
@@ -151,9 +151,9 @@ class ConditionalFormComponent extends FormComponent {
   createConditionalComponents (def, model) {
     const filteredItems = this.list.items.filter(item => item.conditional && item.conditional.components)
     // Create a collection of conditional components that can be converted to a view model and rendered by Nunjucks
-    // before primary view model rendering takes place.
+    // before p0rimary view model rendering takes place.
     filteredItems.map(item => {
-      item.conditional.components = new ComponentCollection(item.conditional.components, model)
+      item.conditional.componentCollection = new ComponentCollection(item.conditional.components, model)
     })
   }
 
@@ -164,7 +164,7 @@ class ConditionalFormComponent extends FormComponent {
     // gov.uk design system macros.
     if (item.conditional) {
       itemModel.conditional = {
-        html: nunjucks.render('conditional-components.html', { components: item.conditional.components.getViewModel(formData, errors) })
+        html: nunjucks.render('conditional-components.html', { components: item.conditional.componentCollection.getViewModel(formData, errors) })
       }
     }
     return itemModel
