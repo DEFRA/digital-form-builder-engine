@@ -138,18 +138,48 @@ class ConditionalFormComponent extends FormComponent {
     return itemModel
   }
 
+  getFormDataFromState (state) {
+    const formData = super.getFormDataFromState(state)
+    const itemsWithConditionalComponents = this.list.items.filter(item => item.conditional && item.conditional.components)
+    itemsWithConditionalComponents.forEach(item => {
+      const itemFormDataFromState = item.conditional.componentCollection.getFormDataFromState(state)
+      if (itemFormDataFromState && Object.keys(itemFormDataFromState).length > 0) {
+        Object.assign(formData, itemFormDataFromState)
+      }
+    })
+    return formData
+  }
+
   getFormSchemaKeys () {
     return this[getSchemaKeys]('form')
   }
 
   getStateFromValidForm (payload) {
     const state = super.getStateFromValidForm(payload)
-    const filteredItems = this.list.items.filter(item => item.conditional && item.conditional.components)
-    filteredItems.forEach(item => {
-      Object.assign(state, item.conditional.componentCollection.getStateFromValidForm(payload))
+    const itemsWithConditionalComponents = this.list.items.filter(item => item.conditional && item.conditional.components)
+
+    const selectedItemsWithConditionalComponents = itemsWithConditionalComponents.filter(item => {
+      if (payload[this.name] && Array.isArray(payload[this.name])) {
+        return payload[this.name].find(nestedItem => item.value === nestedItem)
+      } else {
+        return item.value === payload[this.name]
+      }
     })
-    // Remove payload values associated with unrevealed conditional content so that state schema validaton succeeds.
-    Object.keys(state).filter(key => !state[key]).map(key => delete state[key])
+
+    // Add selected form data associated with conditionally revealed content to the state.
+    selectedItemsWithConditionalComponents.forEach(item => Object.assign(state, item.conditional.componentCollection.getStateFromValidForm(payload)))
+
+    // Add null values to the state for unselected form data associated with conditionally revealed content.
+    // This will allow changes in the visibility of onditionally revealed content to be reflected in state correctly.
+    const unselectedItemsWithConditionalComponents = itemsWithConditionalComponents.filter(item => !selectedItemsWithConditionalComponents.includes(item))
+    unselectedItemsWithConditionalComponents.forEach(item => {
+      const stateFromValidForm = item.conditional.componentCollection.getStateFromValidForm(payload)
+      Object.values(item.conditional.componentCollection.items).filter(conditionalItem => stateFromValidForm[conditionalItem.name]).forEach(key => {
+        const conditionalItemToNull = key.name
+        Object.assign(stateFromValidForm, { [conditionalItemToNull]: null })
+      })
+      Object.assign(state, stateFromValidForm)
+    })
     return state
   }
 
@@ -172,6 +202,7 @@ class ConditionalFormComponent extends FormComponent {
     const filteredItems = this.items.filter(item => item.conditional && item.conditional.componentCollection)
     const conditionalName = this.name
     const schemaKeys = { [conditionalName]: this[schemaName] }
+    const schema = this[schemaName]
     // All conditional component values are submitted regardless of their visibilty.
     // As such create Joi validation rules such that:
     // a) When a conditional component is visible it is required.
@@ -182,11 +213,20 @@ class ConditionalFormComponent extends FormComponent {
       // based on whether or not the component controlling the conditional reveal is selected.
       Object.keys(conditionalSchemaKeys).forEach(key => {
         Object.assign(schemaKeys, {
-          [key]: joi.alternatives().when(conditionalName, {
-            is: item.value,
-            then: conditionalSchemaKeys[key].required(),
-            otherwise: conditionalSchemaKeys[key].optional().allow('')
-          })
+          [key]: joi.alternatives()
+            .when(conditionalName, {
+              is: item.value,
+              then: conditionalSchemaKeys[key].required(),
+              // If multiple checkboxes are selected their values will be held in an array. In this
+              // case conditionally revealed content is required to be entered if the controlliing
+              // checkbox value is a member of the array of selected checkbox values.
+              otherwise: joi.alternatives()
+                .when(conditionalName, {
+                  is: joi.array().items(schema.only(item.value), joi.any()).required(),
+                  then: conditionalSchemaKeys[key].required(),
+                  otherwise: conditionalSchemaKeys[key].optional().allow('').allow(null)
+                })
+            })
         })
       })
     })
