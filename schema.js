@@ -39,13 +39,15 @@ const schema = joi.object().required().keys({
         value: joi.string().required(),
         description: joi.string().allow(''),
         conditional: joi.object().keys({
-          components: joi.array().required().items(joi.object().keys({
-            type: joi.string().required(),
+          components: joi.array().items(joi.object().keys({
+            type: joi.string(),
             name: joi.string(),
             title: joi.string(),
             hint: joi.string(),
-            options: joi.object().default({}),
-            schema: joi.object().default({})
+            options: joi.object().keys({
+              classes: joi.string()
+            }),
+            schema: joi.object()
           }).unknown(true)).unique('name')
         })
       })).unique('text').unique('value'),

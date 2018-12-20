@@ -90,6 +90,11 @@ module.exports = [
     subType: 'content'
   },
   {
+    name: 'WarningText',
+    title: 'Warning text',
+    subType: 'content'
+  },
+  {
     name: 'Details',
     title: 'Details',
     subType: 'content'

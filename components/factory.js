@@ -740,6 +740,15 @@ const makeComponentTypes = {
         }
       }
     }
+  },
+  WarningText (component) {
+    return {
+      getViewModel () {
+        return {
+          content: component.content
+        }
+      }
+    }
   }
 }
 

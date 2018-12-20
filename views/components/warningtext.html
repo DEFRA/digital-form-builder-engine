@@ -1,0 +1,8 @@
+{% from "warning-text/macro.njk" import govukWarningText %}
+
+{% macro WarningText(component) %}
+  {{ govukWarningText({
+    text: component.model.text,
+    iconFallbackText: component.model.icon
+  }) }}
+{% endmacro %}
