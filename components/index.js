@@ -140,13 +140,15 @@ class ConditionalFormComponent extends FormComponent {
 
   getFormDataFromState (state) {
     const formData = super.getFormDataFromState(state)
-    const itemsWithConditionalComponents = this.list.items.filter(item => item.conditional && item.conditional.components)
-    itemsWithConditionalComponents.forEach(item => {
-      const itemFormDataFromState = item.conditional.componentCollection.getFormDataFromState(state)
-      if (itemFormDataFromState && Object.keys(itemFormDataFromState).length > 0) {
-        Object.assign(formData, itemFormDataFromState)
-      }
-    })
+    if (formData) {
+      const itemsWithConditionalComponents = this.list.items.filter(item => item.conditional && item.conditional.components)
+      itemsWithConditionalComponents.forEach(item => {
+        const itemFormDataFromState = item.conditional.componentCollection.getFormDataFromState(state)
+        if (itemFormDataFromState && Object.keys(itemFormDataFromState).length > 0) {
+          Object.assign(formData, itemFormDataFromState)
+        }
+      })
+    }
     return formData
   }
 
