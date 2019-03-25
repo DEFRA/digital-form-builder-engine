@@ -13,6 +13,7 @@
   "author": "defra",
   "license": "ISC",
   "dependencies": {
+    "@dagrejs/graphlib": "^2.1.4",
     "boom": "7.2.0",
     "expr-eval": "1.2.2",
     "govuk-frontend": "^2.4.1",

@@ -1,0 +1,106 @@
+const Graph = require('@dagrejs/graphlib').Graph
+const Dijkstra = require('@dagrejs/graphlib').alg.dijkstra
+
+const ConditionEvaluator = require('./condition-evaluator')
+const SchemaEvaluator = require('./schema-evaluator')
+
+class JourneyGraph {
+  /**
+   * builds a graph representing the users journey
+   * @param model the journey model, composed of pages, links, conditions and schemas
+   * @param state the state associated with the user's journey
+   * @param defaultPath the path to be returned if a suitable next step cannot be identified
+   */
+  constructor (model, state, currentPath, defaultPath) {
+    this.model = model
+    this.state = state
+    this.currentPath = currentPath
+    this.defaultPath = defaultPath
+    this.graph = this.pagesToGraphNodes(state, this.model.pages)
+    // add unconditional edge and edges where the incoming condition (determined by state) is true
+    this.linksToGraphEdges(this.graph, state, this.model.pages, this.model.conditions)
+  }
+
+  // returns the path of the earliest of pages that either:
+  // have a schema error
+  // or are later than this page and have no form builder components
+  // in the case where no matches are found a default is returned
+  getNext () {
+    const first = this.getFirst(this.graph)
+    if (!first) {
+      return this.defaultPath
+    }
+    return first.id
+  }
+
+  // create a node for each page with a / property and a schemaPassed property
+  pagesToGraphNodes (state, pages) {
+    let g = new Graph()
+    // add nodes (pages)
+    for (let p of pages) {
+      const scopedState = p.section ? state[p.section.name] : state
+      const passed = this.schemaPassed(p.hasFormComponents, p.stateSchema, scopedState)
+      const hasSchema = p.hasFormComponents
+      g.setNode(p.path, { label: p.path, schemaPassed: passed, hasSchema: hasSchema })
+    }
+    return g
+  }
+
+  linksToGraphEdges (g, state, pages, conditions) {
+    for (let p of pages) {
+      for (let next of p.pageDef.next) {
+        const dest = pages.find(j => next.path === j.path)
+        if (dest) {
+          const condition = dest.condition
+          if (!condition || this.conditionPasses(condition, conditions, state)) {
+            // always add unconditional edges
+            // add conditional edges only if the condition evaluates to true
+            g.setEdge(p.path, dest.path)
+          }
+        }
+      }
+    }
+  }
+
+  // lookup expr-eval condition and evaluate it
+  conditionPasses (condition, conditions, state) {
+    return ConditionEvaluator.eval(condition, conditions, state)
+  }
+
+  // get the earliest page that has a schema error
+  getFirst (g) {
+    const dijkstra = Dijkstra(g, '/', function () { return 1 })
+    // convert object to array for filtering
+    const dijkstraArr = Object.keys(dijkstra).map(key => {
+      return {
+        id: key,
+        hasSchema: g.node(key) && g.node(key).hasSchema,
+        schemaPassed: g.node(key) && g.node(key).schemaPassed,
+        distance: dijkstra[key].distance
+      }
+    })
+    // do not consider nodes that are unreachable either because:
+    //   - there is no route from the start node '/'
+    //   - this could be because its incoming edges were not added as the incoming condition was not met
+    const reachable = dijkstraArr.filter(n => n.distance !== Infinity)
+    // add nodes where the schema is yet to be satisfied
+    const schemaFailing = reachable.filter(n => n.hasSchema && !n.schemaPassed)
+    const current = dijkstraArr.find(n => n.id === this.currentPath)
+    // add nodes without schemas that are further from the start than this node
+    const laterNonSchemaPages = reachable.filter(n => !(n.hasSchema) && n.distance > current.distance)
+    const filtered = [...schemaFailing, ...laterNonSchemaPages]
+    // return the node closest to the start
+    const sorted = filtered.sort((a, b) => {
+      return a.distance - b.distance
+    })
+    return sorted[0]
+  }
+
+  // evaluate the joi schema against the current state
+  schemaPassed (hasFormComponents, stateSchema, scopedState) {
+    const conditionOptions = this.model.conditionOptions
+    return SchemaEvaluator.itPasses(hasFormComponents, stateSchema, scopedState, conditionOptions)
+  }
+}
+
+module.exports = JourneyGraph

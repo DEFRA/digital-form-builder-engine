@@ -4,6 +4,7 @@ const { ComponentCollection } = require('./components')
 
 const FORM_SCHEMA = Symbol('FORM_SCHEMA')
 const STATE_SCHEMA = Symbol('STATE_SCHEMA')
+const JourneyGraph = require('./journey-graph')
 
 class Page {
   constructor (model, pageDef) {
@@ -63,25 +64,9 @@ class Page {
   }
 
   getNext (state) {
-    const page = this.model.pages.filter(p => p !== this).find(page => {
-      const value = page.section ? state[page.section.name] : state
-      const isRequired = page.condition
-        ? (this.model.conditions[page.condition]).fn(state)
-        : true
-
-      if (isRequired) {
-        if (!page.hasFormComponents) {
-          return true
-        } else {
-          const error = joi.validate(value || {}, page.stateSchema.required(), this.model.conditionOptions).error
-          const isValid = !error
-
-          return !isValid
-        }
-      }
-    })
-
-    return (page && page.path) || this.defaultNextPath
+    console.log(this.pageDef.path)
+    const g = new JourneyGraph(this.model, state, this.pageDef.path, '/not-found')
+    return g.getNext()
   }
 
   getFormDataFromState (state) {
