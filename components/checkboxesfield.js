@@ -9,14 +9,14 @@ class CheckboxesField extends FormComponent {
     const list = model.lists.find(list => list.name === options.list)
     const items = list.items
     const values = items.map(item => item.value)
-    const itemSchema = joi[list.type]().valid(values)
-    const itemsSchema = joi.array().items(itemSchema)
-    const alternatives = joi.alternatives([itemSchema, itemsSchema])
+    const itemSchema = joi[list.type]().valid(...values)
+    const itemsSchema = joi.array().items(itemSchema).single()
+    // const alternatives = joi.alternatives([itemSchema, itemsSchema])
 
     this.list = list
     this.items = items
-    this.formSchema = helpers.buildFormSchema(alternatives, this, options.required !== false)
-    this.stateSchema = helpers.buildStateSchema(alternatives, this)
+    this.formSchema = helpers.buildFormSchema(itemsSchema, this, options.required !== false)
+    this.stateSchema = helpers.buildStateSchema(itemsSchema, this)
   }
 
   getFormSchemaKeys () {

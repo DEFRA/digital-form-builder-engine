@@ -71,7 +71,8 @@ class Page {
         if (!page.hasFormComponents) {
           return true
         } else {
-          const error = joi.validate(value || {}, page.stateSchema.required(), this.model.conditionOptions).error
+          const schema = page.stateSchema.required()
+          const error = schema.validate(value || {}, this.model.conditionOptions).error
           const isValid = !error
 
           return !isValid
@@ -110,7 +111,7 @@ class Page {
   }
 
   validate (value, schema) {
-    const result = joi.validate(value, schema, this.validationOptions)
+    const result = schema.validate(value, this.validationOptions)
     const errors = result.error ? this.getErrors(result) : null
 
     return { value: result.value, errors }

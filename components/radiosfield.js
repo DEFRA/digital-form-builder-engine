@@ -9,8 +9,8 @@ class RadiosField extends FormComponent {
     const list = model.lists.find(list => list.name === options.list)
     const items = list.items
     const values = items.map(item => item.value)
-    const formSchema = helpers.buildFormSchema(list.type, this, options.required !== false).valid(values)
-    const stateSchema = helpers.buildStateSchema(list.type, this).valid(values)
+    const formSchema = helpers.buildFormSchema(list.type, this, options.required !== false).valid(...values)
+    const stateSchema = helpers.buildStateSchema(list.type, this).valid(...values)
 
     this.list = list
     this.items = items

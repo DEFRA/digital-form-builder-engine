@@ -6,7 +6,7 @@ const Parser = require('expr-eval').Parser
 
 class Model {
   constructor (def, options) {
-    const result = joi.validate(def, schema, { abortEarly: false })
+    const result = schema.validate(def, { abortEarly: false })
 
     if (result.error) {
       throw result.error

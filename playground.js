@@ -1,21 +1,21 @@
 const joi = require('joi')
-const boom = require('boom')
+const boom = require('@hapi/boom')
 const pkg = require('./package.json')
 const addressService = require('./address-service')
-const Model = require('./components')
-const { SummaryViewModel } = require('./models')
+const Model = require('./model')
+// const { SummaryViewModel } = require('./models')
 const { proceed } = require('./helpers')
 
 module.exports = {
   plugin: {
     name: pkg.name,
     version: pkg.version,
-    dependencies: 'vision',
+    dependencies: '@hapi/vision',
     register: (server, options) => {
-      const { getState, mergeState, ordnanceSurveyKey, playgroundModel } = options
+      const { getState, mergeState, ordnanceSurveyKey, playgroundModel, relativeTo } = options
 
       const getModel = (request) => {
-        return new Model(request.yar.get('model') || playgroundModel)
+        return new Model(request.yar.get('model') || playgroundModel, { getState, mergeState, relativeTo })
       }
 
       async function get (request, page, h) {
@@ -27,16 +27,20 @@ module.exports = {
       async function post (request, page, h) {
         const payload = request.payload
         const options = { abortEarly: false }
-        const formResult = joi.validate(payload, page.formSchema, options)
+        const schema = page.formSchema
+        const formResult = schema.validate(payload, options)
 
         if (formResult.error) {
-          return h.view('index', page.getViewModel(payload, formResult))
+          const errors = page.getErrors(formResult)
+          return h.view('index', page.getViewModel(payload, errors))
         } else {
           const newState = page.getStateFromValidForm(formResult.value)
-          const stateResult = joi.validate(newState, page.stateSchema, options)
+          const schema = page.stateSchema
+          const stateResult = schema.validate(newState, options)
 
           if (stateResult.error) {
-            return h.view('index', page.getViewModel(payload, stateResult))
+            const errors = page.getErrors(stateResult)
+            return h.view('index', page.getViewModel(payload, errors))
           } else {
             const update = page.section ? {
               [page.section.name]: stateResult.value
@@ -114,9 +118,9 @@ module.exports = {
         },
         options: {
           validate: {
-            query: {
+            query: joi.object().keys({
               postcode: joi.string().required()
-            }
+            })
           }
         }
       })

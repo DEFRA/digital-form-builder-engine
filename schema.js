@@ -32,20 +32,28 @@ const schema = joi.object().required().keys({
     name: joi.string().required(),
     title: joi.string().required(),
     type: joi.string().required().valid('string', 'number'),
-    items: joi.alternatives().when('type', {
-      is: 'string',
-      then: joi.array().required().items(joi.object().keys({
+    items: joi.array().required().items(joi.object().keys({
         text: joi.string().required(),
-        value: joi.string().required(),
-        description: joi.string().allow('')
-      })).unique('text').unique('value'),
-      otherwise: joi.array().required().items(joi.object().keys({
-        text: joi.string().required(),
-        value: joi.number().required(),
+        value: joi.alternatives().try(joi.number(), joi.string()),
         description: joi.string().allow('')
       })).unique('text').unique('value')
-    })
   })).unique('name')
 })
 
 module.exports = schema
+
+
+
+// joi.alternatives().when('type', {
+//       is: 'string',
+//       then: joi.array().required().items(joi.object().keys({
+//         text: joi.string().required(),
+//         value: joi.string().required(),
+//         description: joi.string().allow('')
+//       })).unique('text').unique('value'),
+//       otherwise: joi.array().required().items(joi.object().keys({
+//         text: joi.string().required(),
+//         value: joi.number().required(),
+//         description: joi.string().allow('')
+//       })).unique('text').unique('value')
+//     })

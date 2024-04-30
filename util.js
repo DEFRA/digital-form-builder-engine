@@ -1,4 +1,4 @@
-const wreck = require('wreck')
+const wreck = require('@hapi/wreck')
 
 function request (method, url, options) {
   return wreck[method](url, options)
