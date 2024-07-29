@@ -21,7 +21,12 @@ module.exports = {
       async function get (request, page, h) {
         const state = await getState(request)
         const formData = page.getFormDataFromState(state)
-        return h.view('index', page.getViewModel(formData))
+        const viewModel = page.getViewModel(formData)
+
+        viewModel.__state = state
+        viewModel.__formData = formData
+
+        return h.view('index', viewModel)
       }
 
       async function post (request, page, h) {
@@ -42,9 +47,11 @@ module.exports = {
             const errors = page.getErrors(stateResult)
             return h.view('index', page.getViewModel(payload, errors))
           } else {
-            const update = page.section ? {
-              [page.section.name]: stateResult.value
-            } : stateResult.value
+            const update = page.section
+              ? {
+                  [page.section.name]: stateResult.value
+                }
+              : stateResult.value
 
             const state = await mergeState(request, update)
 
@@ -92,16 +99,16 @@ module.exports = {
       })
 
       // SUMMARY
-      server.route({
-        method: 'get',
-        path: '/summary',
-        handler: async (request, h) => {
-          const state = await getState(request)
-          const viewModel = new SummaryViewModel(getModel(request), state)
+      // server.route({
+      //   method: 'get',
+      //   path: '/summary',
+      //   handler: async (request, h) => {
+      //     const state = await getState(request)
+      //     const viewModel = new SummaryViewModel(getModel(request), state)
 
-          return h.view('summary', viewModel)
-        }
-      })
+      //     return h.view('summary', viewModel)
+      //   }
+      // })
 
       // FIND ADDRESS
       server.route({

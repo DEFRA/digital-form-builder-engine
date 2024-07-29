@@ -62,7 +62,7 @@ class FormComponent extends Component {
         classes: 'govuk-label--s'
       },
       id: name,
-      name: name,
+      name,
       value: formData[name]
     }
 

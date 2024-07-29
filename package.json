@@ -22,6 +22,6 @@
     "standard": "17.1.0"
   },
   "peerDependencies": {
-    "joi": "^17"
+    "joi": "17.13.3"
   }
 }

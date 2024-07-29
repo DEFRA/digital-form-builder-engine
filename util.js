@@ -35,9 +35,9 @@ function getJson (url) {
 }
 
 module.exports = {
-  get: get,
-  post: post,
-  getJson: getJson,
-  postJson: postJson,
-  request: request
+  get,
+  post,
+  getJson,
+  postJson,
+  request
 }

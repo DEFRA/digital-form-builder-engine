@@ -36,6 +36,7 @@ class Model {
     this.def = def
     this.lists = def.lists
     this.sections = def.sections
+    this.groups = def.groups
     this.options = options
 
     const { getState, mergeState } = options
@@ -132,7 +133,7 @@ class EvaluationContext {
   constructor (conditions, value) {
     Object.assign(this, value)
 
-    for (let key in conditions) {
+    for (const key in conditions) {
       Object.defineProperty(this, key, {
         get () {
           return conditions[key].fn(value)

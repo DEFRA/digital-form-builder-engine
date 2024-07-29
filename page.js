@@ -1,4 +1,3 @@
-const joi = require('joi')
 const { proceed } = require('./helpers')
 const { ComponentCollection } = require('./components')
 
@@ -16,6 +15,7 @@ class Page {
     this.path = pageDef.path
     this.title = pageDef.title
     this.condition = pageDef.condition
+    this.group = pageDef.group
 
     // Resolve section
     const section = pageDef.section &&
@@ -61,11 +61,24 @@ class Page {
   }
 
   getNext (state) {
+    const conditions = this.model.conditions
+    const groups = this.model.groups
+
     const page = this.model.pages.filter(p => p !== this).find(page => {
       const value = page.section ? state[page.section.name] : state
-      const isRequired = page.condition
-        ? (this.model.conditions[page.condition]).fn(state)
-        : true
+      const group = page.group && groups.find(group => group.name === page.group)
+      const groupCondition = group?.condition && conditions[group.condition]
+      const pageCondition = page.condition ? conditions[page.condition] : undefined
+
+      let isRequired = true
+
+      if (groupCondition) {
+        isRequired = groupCondition.fn(state)
+      }
+
+      if (isRequired && pageCondition) {
+        isRequired = pageCondition.fn(state)
+      }
 
       if (isRequired) {
         if (!page.hasFormComponents) {
@@ -78,6 +91,8 @@ class Page {
           return !isValid
         }
       }
+
+      return false
     })
 
     return (page && page.path) || this.defaultNextPath
@@ -102,7 +117,7 @@ class Page {
           return {
             path: err.path.join('.'),
             href: `#${name}`,
-            name: name,
+            name,
             text: err.message
           }
         })
