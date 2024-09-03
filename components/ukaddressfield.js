@@ -9,11 +9,11 @@ class UkAddressField extends FormComponent {
     const stateSchema = helpers.buildStateSchema('date', this)
 
     const childrenList = [
-      { type: 'TextField', name: `premises`, title: 'Premises', schema: { max: 100 }, options: { required: options.required } },
-      { type: 'TextField', name: `street`, title: 'Street', schema: { max: 100, allow: '' }, options: { required: false } },
-      { type: 'TextField', name: `locality`, title: 'Locality', schema: { max: 100, allow: '' }, options: { required: false } },
-      { type: 'TextField', name: `town`, title: 'Town', schema: { max: 100 }, options: { required: options.required } },
-      { type: 'TextField', name: `postcode`, title: 'Postcode', schema: { max: 10 }, options: { required: options.required } }
+      { type: 'TextField', name: 'premises', title: 'Premises', schema: { max: 100 }, options: { required: options.required } },
+      { type: 'TextField', name: 'street', title: 'Street', schema: { max: 100, allow: '' }, options: { required: false } },
+      { type: 'TextField', name: 'locality', title: 'Locality', schema: { max: 100, allow: '' }, options: { required: false } },
+      { type: 'TextField', name: 'town', title: 'Town', schema: { max: 100 }, options: { required: options.required } },
+      { type: 'TextField', name: 'postcode', title: 'Postcode', schema: { max: 10 }, options: { required: options.required } }
     ]
 
     const stateChildren = new ComponentCollection(childrenList, model)
@@ -61,28 +61,32 @@ class UkAddressField extends FormComponent {
     // parts together constitute a valid date.
     // E.g. 31 November is not a valid date
     const name = this.name
-    return payload[`${name}__premises`] ? {
-      premises: payload[`${name}__premises`],
-      street: payload[`${name}__street`],
-      locality: payload[`${name}__locality`],
-      town: payload[`${name}__town`],
-      postcode: payload[`${name}__postcode`]
-    } : null
+    return payload[`${name}__premises`]
+      ? {
+          premises: payload[`${name}__premises`],
+          street: payload[`${name}__street`],
+          locality: payload[`${name}__locality`],
+          town: payload[`${name}__town`],
+          postcode: payload[`${name}__postcode`]
+        }
+      : null
   }
 
   getDisplayStringFromState (state) {
     const name = this.name
     const value = state[name]
 
-    return value ? [
-      value.premises,
-      value.street,
-      value.locality,
-      value.town,
-      value.postcode
-    ].filter(p => {
-      return !!p
-    }).join(', ') : ''
+    return value
+      ? [
+          value.premises,
+          value.street,
+          value.locality,
+          value.town,
+          value.postcode
+        ].filter(p => {
+          return !!p
+        }).join(', ')
+      : ''
   }
 
   getViewModel (formData, errors) {

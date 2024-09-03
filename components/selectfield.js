@@ -10,7 +10,7 @@ class SelectField extends FormComponent {
     const items = list.items
     const values = items.map(item => item.value)
     const formSchema = helpers.buildFormSchema('string'/* list.type */, this) // .valid(values)
-    const stateSchema = helpers.buildStateSchema(list.type, this).valid(values)
+    const stateSchema = helpers.buildStateSchema(list.type, this).valid(...values)
 
     this.list = list
     this.items = items

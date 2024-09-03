@@ -33,7 +33,7 @@ function getBaseFormFieldViewModel (component, formData, errors) {
       classes: 'govuk-label--s'
     },
     id: name,
-    name: name,
+    name,
     value: formData[name]
   }
 
@@ -631,11 +631,11 @@ const makeComponentTypes = {
 
     // Component collection
     const childFormComponentList = [
-      { type: 'TextField', name: `premises`, title: 'Premises', schema: { max: 100 }, options: { required: options.required } },
-      { type: 'TextField', name: `street`, title: 'Street', schema: { max: 100, allow: '' }, options: { required: false } },
-      { type: 'TextField', name: `locality`, title: 'Locality', schema: { max: 100, allow: '' }, options: { required: false } },
-      { type: 'TextField', name: `town`, title: 'Town', schema: { max: 100 }, options: { required: options.required } },
-      { type: 'TextField', name: `postcode`, title: 'Postcode', schema: { max: 10 }, options: { required: options.required } }
+      { type: 'TextField', name: 'premises', title: 'Premises', schema: { max: 100 }, options: { required: options.required } },
+      { type: 'TextField', name: 'street', title: 'Street', schema: { max: 100, allow: '' }, options: { required: false } },
+      { type: 'TextField', name: 'locality', title: 'Locality', schema: { max: 100, allow: '' }, options: { required: false } },
+      { type: 'TextField', name: 'town', title: 'Town', schema: { max: 100 }, options: { required: options.required } },
+      { type: 'TextField', name: 'postcode', title: 'Postcode', schema: { max: 10 }, options: { required: options.required } }
     ]
     const stateComponents = makeComponentCollection(childFormComponentList, def)
 
@@ -669,26 +669,30 @@ const makeComponentTypes = {
       },
       getStateFromValidForm (payload) {
         return {
-          [name]: payload[`${name}__premises`] ? {
-            premises: payload[`${name}__premises`],
-            street: payload[`${name}__street`],
-            locality: payload[`${name}__locality`],
-            town: payload[`${name}__town`],
-            postcode: payload[`${name}__postcode`]
-          } : null
+          [name]: payload[`${name}__premises`]
+            ? {
+                premises: payload[`${name}__premises`],
+                street: payload[`${name}__street`],
+                locality: payload[`${name}__locality`],
+                town: payload[`${name}__town`],
+                postcode: payload[`${name}__postcode`]
+              }
+            : null
         }
       },
       getDisplayStringFromState (state) {
         const value = state[name]
-        return value ? [
-          value.premises,
-          value.street,
-          value.locality,
-          value.town,
-          value.postcode
-        ].filter(p => {
-          return !!p
-        }).join(', ') : ''
+        return value
+          ? [
+              value.premises,
+              value.street,
+              value.locality,
+              value.town,
+              value.postcode
+            ].filter(p => {
+              return !!p
+            }).join(', ')
+          : ''
       },
       getViewModel (formData, errors) {
         const viewModel = getBaseFormFieldViewModel(component, formData, errors)
@@ -764,10 +768,10 @@ function makeComponent (componentDef, def) {
     const schema = componentDef.schema
 
     Object.assign(component, {
-      name: name,
+      name,
       hint: componentDef.hint,
       title: componentDef.title,
-      schema: schema,
+      schema,
       getFormSchemaKeys () { return { [name]: joi.any() } },
       getStateSchemaKeys () { return { [name]: joi.any() } },
       getFormDataFromState (state) {

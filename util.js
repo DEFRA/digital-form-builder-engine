@@ -1,4 +1,4 @@
-const wreck = require('wreck')
+const wreck = require('@hapi/wreck')
 
 function request (method, url, options) {
   return wreck[method](url, options)
@@ -35,9 +35,9 @@ function getJson (url) {
 }
 
 module.exports = {
-  get: get,
-  post: post,
-  getJson: getJson,
-  postJson: postJson,
-  request: request
+  get,
+  post,
+  getJson,
+  postJson,
+  request
 }

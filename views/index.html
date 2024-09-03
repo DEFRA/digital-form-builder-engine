@@ -1,4 +1,5 @@
 {% from "error-summary/macro.njk" import govukErrorSummary %}
+{% from "details/macro.njk" import govukDetails %}
 {% from "partials/components.html" import componentList %}
 
 {% extends 'layout.html' %}
@@ -18,7 +19,15 @@
         {{ componentList(components) }}
       {% endif %}
 
-      <pre>{{ value | dump(2) | safe }}</pre>
+      {% set debug %}
+        <pre>{{ __state | dump(2) | safe }}</pre>
+        <pre>{{ __formData | dump(2) | safe }}</pre>
+      {% endset %}
+
+      {{ govukDetails({
+        summaryText: "Debug",
+        html: debug
+      }) }}
     </div>
   </div>
 {% endblock %}
