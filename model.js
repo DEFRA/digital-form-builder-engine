@@ -74,7 +74,13 @@ class Model {
         let sectionSchema = joi.object().required()
 
         sectionPages.forEach(sectionPage => {
-          sectionSchema = sectionSchema.concat(sectionPage.stateSchema)
+          const isRequired = sectionPage.condition
+            ? this.conditions[sectionPage.condition].fn(state)
+            : true
+
+          if (isRequired) {
+            sectionSchema = sectionSchema.concat(sectionPage.stateSchema)
+          }
         })
 
         schema = schema.append({
@@ -82,7 +88,13 @@ class Model {
         })
       } else {
         sectionPages.forEach(sectionPage => {
-          schema = schema.concat(sectionPage.stateSchema)
+          const isRequired = sectionPage.condition
+            ? this.conditions[sectionPage.condition].fn(state)
+            : true
+
+          if (isRequired) {
+            schema = schema.concat(sectionPage.stateSchema)
+          }
         })
       }
     })
