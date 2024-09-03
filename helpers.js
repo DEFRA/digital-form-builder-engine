@@ -1,15 +1,15 @@
 function proceed (request, h, nextUrl, force) {
-  let url = nextUrl
+  const url = nextUrl
 
-  const returnUrl = request.query.returnUrl
-  if (returnUrl) {
-    if (force) {
-      const hasQuery = ~url.indexOf('?')
-      url += (hasQuery ? '&' : '?') + 'returnUrl=' + returnUrl
-    } else {
-      url = returnUrl
-    }
-  }
+  // const returnUrl = request.query.returnUrl
+  // if (returnUrl) {
+  //   if (force) {
+  //     const hasQuery = ~url.indexOf('?')
+  //     url += (hasQuery ? '&' : '?') + 'returnUrl=' + returnUrl
+  //   } else {
+  //     url = returnUrl
+  //   }
+  // }
 
   return h.redirect(url)
 }

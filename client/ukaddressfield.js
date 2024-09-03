@@ -1,18 +1,18 @@
-var $components = document.querySelectorAll('.uk-address-component')
+const $components = document.querySelectorAll('.uk-address-component')
 
 $components.forEach(function (component) {
-  var form = component.parentNode.parentNode
-  var lookup = component.querySelector('.uk-address-lookup')
-  var manual = component.querySelector('.uk-address-manual')
-  var submitButton = form.querySelector('button[type=submit]')
-  var lookupQuery = form.querySelector('.uk-address-query')
-  var lookupSelector = form.querySelector('.uk-address-selector')
-  var postcode = lookupQuery.querySelector('input.postcode-query')
-  var lookupButton = lookupQuery.querySelector('button.postcode-lookup')
-  var postcodeDisplay = lookupSelector.querySelector('.postcode-query-display')
-  var selector = lookupSelector.querySelector('.uk-address-selector select')
-  var lookupLinks = form.querySelectorAll('.postcode-query-link')
-  var manualLink = form.querySelector('.postcode-manual-link')
+  const form = component.parentNode.parentNode
+  const lookup = component.querySelector('.uk-address-lookup')
+  const manual = component.querySelector('.uk-address-manual')
+  const submitButton = form.querySelector('button[type=submit]')
+  const lookupQuery = form.querySelector('.uk-address-query')
+  const lookupSelector = form.querySelector('.uk-address-selector')
+  const postcode = lookupQuery.querySelector('input.postcode-query')
+  const lookupButton = lookupQuery.querySelector('button.postcode-lookup')
+  const postcodeDisplay = lookupSelector.querySelector('.postcode-query-display')
+  const selector = lookupSelector.querySelector('.uk-address-selector select')
+  const lookupLinks = form.querySelectorAll('.postcode-query-link')
+  const manualLink = form.querySelector('.postcode-manual-link')
 
   if (!component.querySelector('.uk-address-manual .govuk-form-group--error')) {
     showLookup()
@@ -22,7 +22,7 @@ $components.forEach(function (component) {
 
   lookupButton.addEventListener('click', function (e) {
     e.preventDefault()
-    var postcodeQuery = postcode.value.trim().toUpperCase()
+    const postcodeQuery = postcode.value.trim().toUpperCase()
 
     if (!postcodeQuery) {
       return showManual()
@@ -34,9 +34,9 @@ $components.forEach(function (component) {
         return
       }
 
-      var label = results.length + ' Address' + (results.length > 1 ? 'es' : '') + ' found'
+      const label = results.length + ' Address' + (results.length > 1 ? 'es' : '') + ' found'
 
-      var options = '<option>' + label + '</option>'
+      let options = '<option>' + label + '</option>'
 
       results.forEach(function (result) {
         options += '<option value="' + result.uprn + '">' + result.address + '</option>'
@@ -53,9 +53,9 @@ $components.forEach(function (component) {
   })
 
   selector.addEventListener('change', function (e) {
-    var results = selector._results
-    var value = selector.value
-    var result = results.find(result => result.uprn === value).item
+    const results = selector._results
+    const value = selector.value
+    const result = results.find(result => result.uprn === value).item
     // console.log(result)
     form.querySelector('[name$="premises"]').value = result.BUILDING_NUMBER || result.BUILDING_NAME || ''
     form.querySelector('[name$="street"]').value = result.THOROUGHFARE_NAME || ''
@@ -92,14 +92,15 @@ $components.forEach(function (component) {
 })
 
 function getJSON (url, callback) {
-  var request = new window.XMLHttpRequest()
+  const request = new window.XMLHttpRequest()
   request.open('GET', url, true)
 
   request.onload = function () {
     if (request.status >= 200 && request.status < 400) {
+      let data
       // Success!
       try {
-        var data = JSON.parse(request.responseText)
+        data = JSON.parse(request.responseText)
       } catch (err) {
         callback(err)
         return

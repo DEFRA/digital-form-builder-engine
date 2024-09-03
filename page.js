@@ -1,4 +1,3 @@
-const joi = require('joi')
 const { proceed } = require('./helpers')
 const { ComponentCollection } = require('./components')
 
@@ -16,6 +15,7 @@ class Page {
     this.path = pageDef.path
     this.title = pageDef.title
     this.condition = pageDef.condition
+    this.group = pageDef.group
 
     // Resolve section
     const section = pageDef.section &&
@@ -26,9 +26,7 @@ class Page {
     // Components collection
     const components = new ComponentCollection(pageDef.components, model)
     this.components = components
-    const conditionalFormComponents = components.formItems.filter(c => c.conditionalComponents)
     this.hasFormComponents = !!components.formItems.length
-    this.hasConditionalFormComponents = !!conditionalFormComponents.length
 
     // Schema
     this[FORM_SCHEMA] = this.components.formSchema
@@ -63,22 +61,38 @@ class Page {
   }
 
   getNext (state) {
+    const conditions = this.model.conditions
+    const groups = this.model.groups
+
     const page = this.model.pages.filter(p => p !== this).find(page => {
       const value = page.section ? state[page.section.name] : state
-      const isRequired = page.condition
-        ? (this.model.conditions[page.condition]).fn(state)
-        : true
+      const group = page.group && groups.find(group => group.name === page.group)
+      const groupCondition = group?.condition && conditions[group.condition]
+      const pageCondition = page.condition ? conditions[page.condition] : undefined
+
+      let isRequired = true
+
+      if (groupCondition) {
+        isRequired = groupCondition.fn(state)
+      }
+
+      if (isRequired && pageCondition) {
+        isRequired = pageCondition.fn(state)
+      }
 
       if (isRequired) {
         if (!page.hasFormComponents) {
           return true
         } else {
-          const error = joi.validate(value || {}, page.stateSchema.required(), this.model.conditionOptions).error
+          const schema = page.stateSchema.required()
+          const error = schema.validate(value || {}, this.model.conditionOptions).error
           const isValid = !error
 
           return !isValid
         }
       }
+
+      return false
     })
 
     return (page && page.path) || this.defaultNextPath
@@ -103,7 +117,7 @@ class Page {
           return {
             path: err.path.join('.'),
             href: `#${name}`,
-            name: name,
+            name,
             text: err.message
           }
         })
@@ -112,7 +126,7 @@ class Page {
   }
 
   validate (value, schema) {
-    const result = joi.validate(value, schema, this.validationOptions)
+    const result = schema.validate(value, this.validationOptions)
     const errors = result.error ? this.getErrors(result) : null
 
     return { value: result.value, errors }

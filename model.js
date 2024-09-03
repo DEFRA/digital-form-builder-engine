@@ -6,7 +6,7 @@ const Parser = require('expr-eval').Parser
 
 class Model {
   constructor (def, options) {
-    const result = joi.validate(def, schema, { abortEarly: false })
+    const result = schema.validate(def, { abortEarly: false })
 
     if (result.error) {
       throw result.error
@@ -36,6 +36,7 @@ class Model {
     this.def = def
     this.lists = def.lists
     this.sections = def.sections
+    this.groups = def.groups
     this.options = options
 
     const { getState, mergeState } = options
@@ -73,7 +74,13 @@ class Model {
         let sectionSchema = joi.object().required()
 
         sectionPages.forEach(sectionPage => {
-          sectionSchema = sectionSchema.concat(sectionPage.stateSchema)
+          const isRequired = sectionPage.condition
+            ? this.conditions[sectionPage.condition].fn(state)
+            : true
+
+          if (isRequired) {
+            sectionSchema = sectionSchema.concat(sectionPage.stateSchema)
+          }
         })
 
         schema = schema.append({
@@ -81,7 +88,13 @@ class Model {
         })
       } else {
         sectionPages.forEach(sectionPage => {
-          schema = schema.concat(sectionPage.stateSchema)
+          const isRequired = sectionPage.condition
+            ? this.conditions[sectionPage.condition].fn(state)
+            : true
+
+          if (isRequired) {
+            schema = schema.concat(sectionPage.stateSchema)
+          }
         })
       }
     })
@@ -132,7 +145,7 @@ class EvaluationContext {
   constructor (conditions, value) {
     Object.assign(this, value)
 
-    for (let key in conditions) {
+    for (const key in conditions) {
       Object.defineProperty(this, key, {
         get () {
           return conditions[key].fn(value)

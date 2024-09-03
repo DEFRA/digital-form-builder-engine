@@ -1,18 +1,30 @@
 const joi = require('joi')
-const { ConditionalFormComponent } = require('.')
+const { FormComponent } = require('.')
 const helpers = require('./helpers')
 
-class CheckboxesField extends ConditionalFormComponent {
+class CheckboxesField extends FormComponent {
   constructor (def, model) {
     super(def, model)
-    const { list, options, values } = this
-    const itemSchema = joi[list.type]().valid(values)
-    const itemsSchema = joi.array().items(itemSchema)
-    const alternatives = joi.alternatives([itemSchema, itemsSchema])
+    const { options } = this
+    const list = model.lists.find(list => list.name === options.list)
+    const items = list.items
+    const values = items.map(item => item.value)
+    const itemSchema = joi[list.type]().valid(...values)
+    const itemsSchema = joi.array().items(itemSchema).single()
+    // const alternatives = joi.alternatives([itemSchema, itemsSchema])
 
     this.list = list
-    this.formSchema = helpers.buildFormSchema(alternatives, this, options.required !== false)
-    this.stateSchema = helpers.buildStateSchema(alternatives, this)
+    this.items = items
+    this.formSchema = helpers.buildFormSchema(itemsSchema, this, options.required !== false)
+    this.stateSchema = helpers.buildStateSchema(itemsSchema, this)
+  }
+
+  getFormSchemaKeys () {
+    return { [this.name]: this.formSchema }
+  }
+
+  getStateSchemaKeys () {
+    return { [this.name]: this.stateSchema }
   }
 
   getDisplayStringFromState (state) {
@@ -66,7 +78,7 @@ class CheckboxesField extends ConditionalFormComponent {
           }
         }
 
-        return super.addConditionalComponents(item, itemModel, formData, errors)
+        return itemModel
       })
     })
 

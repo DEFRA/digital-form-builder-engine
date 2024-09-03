@@ -1,5 +1,5 @@
 const joi = require('joi')
-const boom = require('boom')
+const boom = require('@hapi/boom')
 const pkg = require('./package.json')
 const addressService = require('./address-service')
 
@@ -7,7 +7,7 @@ module.exports = {
   plugin: {
     name: pkg.name,
     version: pkg.version,
-    dependencies: 'vision',
+    dependencies: '@hapi/vision',
     register: (server, options) => {
       const { model, ordnanceSurveyKey } = options
 
@@ -36,9 +36,9 @@ module.exports = {
         },
         options: {
           validate: {
-            query: {
+            query: joi.object().keys({
               postcode: joi.string().required()
-            }
+            })
           }
         }
       })

@@ -1,16 +1,29 @@
-const { ConditionalFormComponent } = require('.')
+const { FormComponent } = require('.')
 const helpers = require('./helpers')
 
-class RadiosField extends ConditionalFormComponent {
+class RadiosField extends FormComponent {
   constructor (def, model) {
     super(def, model)
 
-    const { list, options, values } = this
-    const formSchema = helpers.buildFormSchema(list.type, this, options.required !== false).valid(values)
-    const stateSchema = helpers.buildStateSchema(list.type, this).valid(values)
+    const { options } = this
+    const list = model.lists.find(list => list.name === options.list)
+    const items = list.items
+    const values = items.map(item => item.value)
+    const formSchema = helpers.buildFormSchema(list.type, this, options.required !== false).valid(...values)
+    const stateSchema = helpers.buildStateSchema(list.type, this).valid(...values)
 
+    this.list = list
+    this.items = items
     this.formSchema = formSchema
     this.stateSchema = stateSchema
+  }
+
+  getFormSchemaKeys () {
+    return { [this.name]: this.formSchema }
+  }
+
+  getStateSchemaKeys () {
+    return { [this.name]: this.stateSchema }
   }
 
   getDisplayStringFromState (state) {
@@ -28,7 +41,7 @@ class RadiosField extends ConditionalFormComponent {
       fieldset: {
         legend: viewModel.label
       },
-      items: items.map((item) => {
+      items: items.map(item => {
         const itemModel = {
           html: item.text,
           value: item.value,
@@ -49,7 +62,7 @@ class RadiosField extends ConditionalFormComponent {
           }
         }
 
-        return super.addConditionalComponents(item, itemModel, formData, errors)
+        return itemModel
       })
     })
 

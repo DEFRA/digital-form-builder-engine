@@ -1,7 +1,7 @@
 const joi = require('joi')
 
 function buildSchema (type, keys) {
-  let schema = type.isJoi ? type : joi[type]()
+  let schema = joi.isSchema(type) ? type : joi[type]()
 
   Object.keys(keys).forEach(key => {
     const val = keys[key]

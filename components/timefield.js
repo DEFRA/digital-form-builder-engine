@@ -7,7 +7,7 @@ class TimeField extends FormComponent {
     const { options } = this
 
     if (!options.classes) {
-      options.classes = 'govuk-input--width-4'
+      options.classes = 'govuk-input--width-10'
     }
   }
 
